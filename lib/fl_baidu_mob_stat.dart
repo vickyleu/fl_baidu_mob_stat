@@ -13,41 +13,30 @@ class FlBaiduMobStat {
   final MethodChannel _channel = const MethodChannel('fl_baidu_mob_stat');
 
   /// 设置 apiKey
-  Future<bool> setApiKey(
-      {required String androidKey, required String iosKey}) async {
+  Future<bool> init(
+      {required String androidKey,
+        required String iosKey,
+        required String appChannel,
+        required String appVersionName,
+        bool enableDebugOn = false
+      }) async {
     if (!_supportPlatform) return false;
     bool? state = false;
     String? key;
     if (_isAndroid) key = androidKey;
     if (_isIOS) key = iosKey;
     if (key != null) {
-      state = await _channel.invokeMethod<bool?>('setApiKey', key);
+      final map = {"key": key,"appChannel": appChannel, "versionName": appVersionName, "debuggable": enableDebugOn};
+      state = await _channel.invokeMethod<bool?>('init', map);
     }
     return state ?? false;
   }
 
-  /// 是否开启 debug
-  /// 默认 false
-  Future<bool> setDebug(bool enableDebugOn) async {
+  /// 设置 apiKey
+  Future<bool> privilegeGranted() async {
     if (!_supportPlatform) return false;
-    final bool? state =
-        await _channel.invokeMethod<bool?>('setDebug', enableDebugOn);
-    return state ?? false;
-  }
-
-  /// 设置通道
-  Future<bool> setAppChannel(String channel) async {
-    if (!_supportPlatform) return false;
-    final bool? state =
-        await _channel.invokeMethod<bool?>('setAppChannel', channel);
-    return state ?? false;
-  }
-
-  /// 设置App版本
-  Future<bool> setAppVersionName(String versionName) async {
-    if (!_supportPlatform) return false;
-    final bool? state =
-        await _channel.invokeMethod<bool?>('setAppVersionName', versionName);
+    bool? state = false;
+    state = await _channel.invokeMethod<bool?>('privilegeGranted');
     return state ?? false;
   }
 
@@ -134,18 +123,6 @@ class FlBaiduMobStat {
     return state ?? false;
   }
 
-  /// 获取SDK生成的设备的cuId
-  /// android 上获取为空字符串
-  Future<String?> getDeviceCuId() async {
-    if (!_supportPlatform) return null;
-    return await _channel.invokeMethod<String?>('getDeviceCuId');
-  }
-
-  /// 获取SDK生成的设备的测试ID
-  Future<String?> getTestDeviceId() async {
-    if (!_supportPlatform) return null;
-    return await _channel.invokeMethod<String?>('getTestDeviceId');
-  }
 
   bool get _supportPlatform {
     if (!kIsWeb && (_isAndroid || _isIOS)) return true;

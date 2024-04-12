@@ -7,22 +7,16 @@ import 'package:flutter/material.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  final bool key = await FlBaiduMobStat()
-      .setApiKey(androidKey: 'androidKey', iosKey: 'iosKey');
-  debugPrint('初始化是否成功：$key');
-
   String channelName = 'flutter';
   if (Platform.isAndroid) channelName += '- Android';
   if (Platform.isIOS) channelName += '- IOS';
-
-  final bool channel = await FlBaiduMobStat().setAppChannel(channelName);
-  debugPrint('设置channel：$channelName  result : $channel');
-
-  final bool version = await FlBaiduMobStat().setAppVersionName('1.0.0');
-  debugPrint('设置version name：$version');
-
-  final bool debug = await FlBaiduMobStat().setDebug(true);
-  debugPrint('设置是否开启debug模式：$debug');
+  final bool init = await FlBaiduMobStat().init(
+      androidKey: 'androidKey',
+      iosKey: 'iosKey',
+      appChannel: channelName,
+      appVersionName: '1.0.0',
+      enableDebugOn: true);
+  debugPrint('初始化是否成功：$init');
 
   runApp(MaterialApp(
     home: _App(),
@@ -39,20 +33,6 @@ class _App extends StatefulWidget {
 class _AppState extends State<_App> {
   bool _eventStartEndButtonSelected = false;
   String text = '';
-
-  Future<void> _getDeviceCuId() async {
-    final String? cuId = await FlBaiduMobStat().getDeviceCuId();
-    if (cuId == null) return;
-    text = 'CuId:\n$cuId';
-    setState(() {});
-  }
-
-  Future<void> _getTestDeviceId() async {
-    final String? id = await FlBaiduMobStat().getTestDeviceId();
-    if (id == null) return;
-    text = 'TestId\n$id';
-    setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,11 +95,6 @@ class _AppState extends State<_App> {
                   text = 'pageEnd: $state';
                   setState(() {});
                 }),
-            ElevatedButton(
-                onPressed: _getDeviceCuId, child: const Text('getDeviceCuId')),
-            ElevatedButton(
-                onPressed: _getTestDeviceId,
-                child: const Text('getTestDeviceId')),
           ]),
         ));
   }

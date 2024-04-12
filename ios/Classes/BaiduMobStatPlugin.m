@@ -1,6 +1,11 @@
 #import "BaiduMobStatPlugin.h"
 #import "BaiduMobStat.h"
 
+@interface BaiduMobStatPlugin()
+@property(nonatomic,strong)NSString* appkey;
+@property(nonatomic,assign)BOOL isStarted;
+@end
+
 @implementation BaiduMobStatPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
     FlutterMethodChannel *channel = [FlutterMethodChannel
@@ -11,50 +16,54 @@
 }
 
 - (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result {
-    if ([call.method isEqualToString:@"setApiKey"]) {
-        [[BaiduMobStat defaultStat] startWithAppId:call.arguments];
-        [BaiduMobStat defaultStat].platformType = 2;
+    
+    if ([call.method isEqualToString:@"init"]) {
+       NSString* appKey =  call.arguments[@"appKey"];
+       NSString* appChannel =  call.arguments[@"appChannel"];
+       NSString* versionName =  call.arguments[@"versionName"];
+       NSString* debuggable =  call.arguments[@"debuggable"];
+        BaiduMobStat* stat =   [BaiduMobStat defaultStat];
+        self.appkey = appKey;
+       
+        [stat setChannelId:appChannel];
+        [stat setShortAppVersion:versionName];
+        [stat setEnableDebugOn: [debuggable isEqual:@"true"]];
+        [stat setAuthorizedState:NO];
         result(@(YES));
-    } else if ([call.method isEqualToString:@"setAppVersionName"]) {
-        [[BaiduMobStat defaultStat] setShortAppVersion:call.arguments];
+    } else if ([call.method isEqualToString:@"privilegeGranted"]) {
+        BaiduMobStat* stat =   [BaiduMobStat defaultStat];
+        [stat setAuthorizedState:YES];
+        [stat setPlatformType:2];
+        [stat startWithAppId:self.appkey];
+        self.isStarted = YES;
         result(@(YES));
-    } else if ([call.method isEqualToString:@"setAppChannel"]) {
-        [[BaiduMobStat defaultStat] setChannelId:call.arguments];
-        result(@(YES));
-    } else if ([call.method isEqualToString:@"setDebug"]) {
-        [BaiduMobStat defaultStat].enableDebugOn = [call.arguments boolValue];
-        result(@(YES));
-    } else if ([call.method isEqualToString:@"logEvent"]) {
+    } else if ([call.method isEqualToString:@"logEvent"] && self.isStarted ) {
         NSString *eventId = call.arguments[@"eventId"];
         NSDictionary *attributes = [self validArgument:call.arguments[@"attributes"]];
         [[BaiduMobStat defaultStat] logEvent:eventId attributes:attributes];
         result(@(YES));
-    } else if ([call.method isEqualToString:@"logDurationEvent"]) {
+    } else if ([call.method isEqualToString:@"logDurationEvent"] && self.isStarted ) {
         NSString *eventId = call.arguments[@"eventId"];
         NSString *eventLabel = call.arguments[@"label"];
         NSInteger duration = [call.arguments[@"duration"] integerValue];
         NSDictionary *attributes = [self validArgument:call.arguments[@"attributes"]];
         [[BaiduMobStat defaultStat] logEventWithDurationTime:eventId eventLabel:eventLabel durationTime:duration attributes:attributes];
         result(@(YES));
-    } else if ([call.method isEqualToString:@"eventStart"]) {
+    } else if ([call.method isEqualToString:@"eventStart"] && self.isStarted ) {
         [[BaiduMobStat defaultStat] eventStart:call.arguments[@"eventId"] eventLabel:call.arguments[@"label"]];
         result(@(YES));
-    } else if ([call.method isEqualToString:@"eventEnd"]) {
+    } else if ([call.method isEqualToString:@"eventEnd"] && self.isStarted ) {
         NSString *eventId = call.arguments[@"eventId"];
         NSString *label = call.arguments[@"label"];
         NSDictionary *attributes = [self validArgument:call.arguments[@"attributes"]];
         [[BaiduMobStat defaultStat] eventEnd:eventId eventLabel:label attributes:attributes];
         result(@(YES));
-    } else if ([call.method isEqualToString:@"pageStart"]) {
+    } else if ([call.method isEqualToString:@"pageStart"] && self.isStarted ) {
         [[BaiduMobStat defaultStat] pageviewStartWithName:call.arguments];
         result(@(YES));
-    } else if ([call.method isEqualToString:@"pageEnd"]) {
+    } else if ([call.method isEqualToString:@"pageEnd"] && self.isStarted ) {
         [[BaiduMobStat defaultStat] pageviewEndWithName:call.arguments];
         result(@(YES));
-    } else if ([call.method isEqualToString:@"getDeviceCuId"]) {
-        result([[BaiduMobStat defaultStat] getDeviceCuid]);
-    } else if ([call.method isEqualToString:@"getTestDeviceId"]) {
-        result([[BaiduMobStat defaultStat] getTestDeviceId]);
     } else {
         result(FlutterMethodNotImplemented);
     }
