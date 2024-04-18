@@ -26,7 +26,7 @@ class FlBaiduMobStat {
     if (_isAndroid) key = androidKey;
     if (_isIOS) key = iosKey;
     if (key != null) {
-      final map = {"key": key,"appChannel": appChannel, "versionName": appVersionName, "debuggable": enableDebugOn};
+      final map = {"key": key,"appChannel": appChannel, "versionName": appVersionName, "debuggable": "$enableDebugOn"};
       state = await _channel.invokeMethod<bool?>('init', map);
     }
     return state ?? false;
